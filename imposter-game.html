@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Imposter Game</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 1 — HOME
+══════════════════════════════════════════ -->
+<div class="screen active" id="s-home">
+  <div class="gap-lg"></div>
+  <div class="float" style="font-size:72px;margin-bottom:8px;">🕵️</div>
+  <p class="logo">Social Deduction</p>
+  <h1>Imposter<br>Game</h1>
+  <div class="gap-sm"></div>
+  <p class="sub" style="max-width:280px">One word. One liar. Can you find them before they fool everyone?</p>
+  <div class="gap-lg"></div>
+  <button class="btn btn-primary" onclick="goto('s-setup')">Start Game</button>
+  <div class="gap-sm"></div>
+  <p class="sub" style="font-size:12px">3–12 players · Share one phone</p>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 2 — PLAYER SETUP
+══════════════════════════════════════════ -->
+<div class="screen" id="s-setup">
+  <div class="step-dots">
+    <div class="step-dot active"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+  </div>
+  <div class="gap-sm"></div>
+  <p class="logo">Step 1 of 4</p>
+  <h2>Add Players</h2>
+  <div class="gap-sm"></div>
+  <p class="sub" style="max-width:300px">Enter each player's name. At least 3 players needed.</p>
+  <div class="gap-md"></div>
+
+  <div class="player-list" id="player-list"></div>
+
+  <div class="gap-sm"></div>
+  <div class="input-wrap" style="display:flex;gap:10px;max-width:360px">
+    <input type="text" id="name-input" placeholder="Player name…" maxlength="18"
+      onkeydown="if(event.key==='Enter')addPlayer()">
+    <button class="btn btn-ghost btn-sm" style="width:auto;white-space:nowrap;padding:12px 20px" onclick="addPlayer()">Add</button>
+  </div>
+  <div class="gap-md"></div>
+  <button class="btn btn-primary" id="start-btn" onclick="startGame()" disabled>Start Game</button>
+  <div class="gap-sm"></div>
+  <button class="btn btn-ghost btn-sm" onclick="goto('s-home')">Back</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 3 — CARD VIEWING
+══════════════════════════════════════════ -->
+<div class="screen" id="s-view">
+  <div class="step-dots">
+    <div class="step-dot"></div>
+    <div class="step-dot active"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+  </div>
+  <div class="gap-sm"></div>
+  <p class="logo">Step 2 of 4</p>
+  <h2 id="view-title">Your Turn</h2>
+  <div class="gap-sm"></div>
+  <div class="viewing-progress" id="view-progress"></div>
+  <div class="gap-md"></div>
+
+  <div class="flip-scene" id="flip-scene" onclick="revealCard()">
+    <div class="flip-card" id="flip-card">
+      <!-- FRONT -->
+      <div class="flip-front">
+        <div class="flip-front-icon">🔒</div>
+        <div class="flip-front-name" id="front-name">Player</div>
+        <div class="flip-front-label">Tap to reveal your card</div>
+        <div class="flip-front-hint">Make sure others look away</div>
+      </div>
+      <!-- BACK (filled by JS) -->
+      <div class="flip-back" id="flip-back"></div>
+    </div>
+  </div>
+
+  <div class="gap-md"></div>
+  <button class="btn btn-primary" id="next-btn" onclick="nextViewer()" style="display:none">Next Player →</button>
+  <button class="btn btn-ghost btn-sm" id="reveal-hint" onclick="revealCard()" style="max-width:360px">Tap Card to Reveal</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 4 — DISCUSSION (first speaker)
+══════════════════════════════════════════ -->
+<div class="screen" id="s-discuss">
+  <div class="step-dots">
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot active"></div>
+    <div class="step-dot"></div>
+  </div>
+  <div class="gap-sm"></div>
+  <p class="logo">Step 3 of 4</p>
+  <h2>Discussion Time</h2>
+  <div class="gap-sm"></div>
+  <p class="sub" style="max-width:300px">Everyone has their word. Time to talk — find who doesn't quite fit.</p>
+  <div class="gap-lg"></div>
+
+  <div class="speaker-card">
+    <span class="speaker-emoji">🎙️</span>
+    <div class="speaker-label">Goes first</div>
+    <div class="speaker-name" id="first-speaker-name">—</div>
+    <div class="speaker-desc">Give one clue about the word without saying it directly. Then go around the circle.</div>
+  </div>
+
+  <div class="gap-lg"></div>
+  <button class="btn btn-primary" onclick="goto('s-vote')">Start Voting</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 5 — VOTING
+══════════════════════════════════════════ -->
+<div class="screen" id="s-vote">
+  <div class="step-dots">
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot active"></div>
+  </div>
+  <div class="gap-sm"></div>
+  <p class="logo">Step 4 of 4</p>
+  <h2>Cast Your Vote</h2>
+  <div class="gap-sm"></div>
+  <p class="sub" style="max-width:300px">Who is the Imposter? The group votes together — one choice.</p>
+  <div class="gap-md"></div>
+
+  <div class="vote-grid" id="vote-grid"></div>
+  <div class="gap-md"></div>
+  <button class="btn btn-danger" id="vote-submit" onclick="submitVote()" disabled>Reveal Imposter</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 6 — RESULT
+══════════════════════════════════════════ -->
+<div class="screen" id="s-result">
+  <div class="gap-md"></div>
+  <div class="result-banner" id="result-banner">
+    <span class="result-emoji" id="result-emoji">🎉</span>
+    <div class="result-title" id="result-title">Team Wins!</div>
+    <div class="result-sub" id="result-sub">You found the Imposter</div>
+  </div>
+  <div class="gap-md"></div>
+  <div class="info-row">
+    <div class="info-tile glass">
+      <div class="info-tile-label">The Imposter was</div>
+      <div class="info-tile-value" id="res-imposter">—</div>
+    </div>
+    <div class="info-tile glass">
+      <div class="info-tile-label">Secret Word</div>
+      <div class="info-tile-value" id="res-word" style="color:var(--blue)">—</div>
+    </div>
+    <div class="info-tile glass">
+      <div class="info-tile-label">Imposter's Hint</div>
+      <div class="info-tile-value" id="res-hint" style="color:var(--red)">—</div>
+    </div>
+    <div class="info-tile glass">
+      <div class="info-tile-label">Group voted for</div>
+      <div class="info-tile-value" id="res-voted">—</div>
+    </div>
+  </div>
+  <div class="gap-md"></div>
+  <button class="btn btn-primary" onclick="playAgain()">Play Again</button>
+  <div class="gap-sm"></div>
+  <button class="btn btn-ghost btn-sm" onclick="goto('s-home')">Main Menu</button>
+</div>
+
+<!-- Load word database first, then game logic -->
+<script src="words.js"></script>
+<script src="game.js"></script>
+
+</body>
+</html>
